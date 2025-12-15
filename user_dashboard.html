@@ -216,7 +216,9 @@
                         });
                     }
                 })
-                .catch(error);
+                .catch(error => {
+                    alert('Error loading guardians: ' + error.message);
+                });
         }
 
         // Add Guardian Handler
@@ -289,7 +291,9 @@
                         loadGuardians();
                     }
                 })
-                .catch(error);
+                .catch(error => {
+                    alert('❌ Error removing guardian: ' + error.message);
+                });
             }
         }
 
@@ -432,7 +436,9 @@
                         loadComplaints();
                     }
                 })
-                .catch(error);
+                .catch(error => {
+                    alert('❌ Error removing complaint: ' + error.message);
+                });
             }
         }
 
