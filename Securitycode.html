@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Security Code</title>
+    <link rel="stylesheet" href="./assets/css/security.css">
+</head>
+<body>
+    <main class="security-container">
+        <h2>Admin Verification</h2>
+        <p>Enter the security code to proceed:</p>
+        <input type="password" id="security-code" placeholder="Enter Security Code">
+        <button id="verify-btn">Verify</button>
+        <p id="error-message" class="error"></p>
+    </main>
+
+    <script>
+        document.getElementById("verify-btn").addEventListener("click", function () {
+            const enteredCode = document.getElementById("security-code").value;
+            const fixedCode = "Admin123";
+
+            if (enteredCode === fixedCode) {
+                sessionStorage.setItem('securityVerified', 'true');
+                window.location.href = "./admin-dashboard.html";
+            } else {
+                document.getElementById("error-message").textContent = "Invalid security code!";
+            }
+        });
+    </script>
+</body>
+</html>

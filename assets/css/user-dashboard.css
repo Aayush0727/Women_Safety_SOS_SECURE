@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* 
+    Root Variables 
+*/
+:root {
+    --primary-color: #005f6b;
+    --secondary-color: #f6f6f4;
+    --accent-color: #ff4f5a;
+    --light-gray: #e0e0e0;
+    --dark-gray: #333;
+    --white: #ffffff;
+    --text-dark: #222;
+    --text-light: #666;
+}
+
+/* 
+    Global Styling 
+*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+body {
+    background-color: var(--secondary-color);
+    color: var(--text-dark);
+}
+
+/* 
+    Navigation Bar 
+*/
+nav {
+    background-color: var(--primary-color);
+    color: var(--white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+nav h1 {
+    font-size: 22px;
+    font-weight: 600;
+}
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+.profile-btn {
+    background-color: var(--accent-color);
+    color: var(--white);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+.profile-btn:hover {
+    background-color: darken(var(--accent-color), 10%);
+}
+
+/* 
+    Profile Dropdown 
+*/
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background: var(--white);
+    min-width: 220px;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+.profile-dropdown:hover .dropdown-content {
+    display: block;
+}
+.dropdown-content p {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+.dropdown-content button {
+    width: 100%;
+    padding: 8px;
+    background-color: var(--accent-color);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+.dropdown-content button:hover {
+    background-color: darken(var(--accent-color), 10%);
+}
+
+/* 
+    Main Sections 
+*/
+main {
+    padding: 40px;
+}
+section {
+    background-color: var(--white);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+h2 {
+    font-size: 20px;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+/* 
+    Guardian Management Form 
+*/
+form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+input, button {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--light-gray);
+}
+input {
+    flex: 1;
+    min-width: 200px;
+}
+button {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+button:hover {
+    background-color: darken(var(--primary-color), 10%);
+}
+
+/* 
+    Guardian List 
+*/
+ul {
+    list-style: none;
+    padding: 0;
+}
+ul li {
+    background-color: var(--light-gray);
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+ul li button {
+    background-color: var(--accent-color);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    color: var(--white);
+    cursor: pointer;
+}
+ul li button:hover {
+    background-color: darken(var(--accent-color), 10%);
+}
+
+/* 
+    Live Location 
+*/
+.location-section p {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+.location-section button {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+/* 
+    SOS Button 
+*/
+.sos-section {
+    text-align: center;
+}
+#sosBtn {
+    background-color: var(--accent-color);
+    color: var(--white);
+    font-size: 18px;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+#sosBtn:hover {
+    background-color: darken(var(--accent-color), 10%);
+}
+
+/* 
+    Responsive Design 
+*/
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+        text-align: center;
+    }
+    .nav-right {
+        margin-top: 10px;
+    }
+    main {
+        padding: 20px;
+    }
+    form {
+        flex-direction: column;
+    }
+}

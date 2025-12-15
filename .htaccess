@@ -1,0 +1,9 @@
+# Allow all AJAX requests to PHP files
+<FilesMatch "\.php$">
+    Allow from all
+</FilesMatch>
+
+# Hide sensitive configuration files
+<FilesMatch "\.(env|config|sql|db)$">
+    Deny from all
+</FilesMatch>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Hostel Girls Safety - SOS</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+    <main class="card-container slideUp-animation">
+        <div class="image-container">
+            <h1 class="company">Hostel Girls Safety - SOS </h1>
+            <img src="./assets/images/women.png" class="illustration" alt="">
+            <p class="quote">Welcome back! Log in for safety.</p>
+        </div>
+        <form id="loginForm" action="login.php" method="post">
+            <div class="form-container slideRight-animation">
+                <h1 class="form-header">Log in</h1>
+
+                <div class="input-container">
+                    <input type="email" name="email" id="email" required>
+                    <span>E-mail</span>
+                    <div class="error"></div>
+                </div>
+
+                <div class="input-container">
+                    <input type="password" name="password" id="password" required>
+                    <span>Password</span>
+                    <div class="error"></div>
+                </div>
+
+                <!-- Role Selection -->
+                <div class="input-container">
+                     <label for="roleSelect" class="dropdown-label">Select Role:</label>
+                    <select name="role" id="role" required>
+                        <option value="" disabled selected>-- Choose Role --</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <div class="error"></div>
+                </div>
+
+                <div id="btm">
+                    <button type="submit" class="submit-btn">Login</button>
+                    <p class="btm-text">
+                        Don't have an account? <a href="index.html" class="btm-text-highlighted">Get Registered</a>
+                    </p>
+                </div>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

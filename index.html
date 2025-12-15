@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#06aa5e">
+    <meta name="msapplication-navbutton-color" content="#06aa5e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Sign up | Hostel Girls Safety - SOS </title>
+    <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <script defer src="./assets/js/validation.js"></script>
+</head>
+<body>
+    <main class="card-container slideUp-animation">
+        <div class="image-container">
+            <h1 class="company">Hostel Girls Safety - SOS </h1>
+            <img src="./assets/images/women.png" class="illustration" alt="">
+            <p class="quote">Sign up for Security</p>
+            <a href="#btm" class="mobile-btm-nav">
+                <img src="./assets/images/dbl-arrow.png" alt="">
+            </a>
+        </div>
+        <form id="registration-form" action="register.php" method="post">
+            <div class="form-container slideRight-animation">
+    
+                <h1 class="form-header"> Get started </h1>
+    
+                <div class="input-container">
+                    <label for="f-name"></label>
+                    <input type="text" name="f-name" id="f-name" required>
+                    <span>First name</span>
+                    <div class="error"></div>
+                </div>
+    
+                <div class="input-container">
+                    <label for="l-name"></label>
+                    <input type="text" name="l-name" id="l-name" required>
+                    <span>Last name</span>
+                    <div class="error"></div>
+                </div>
+    
+                <div class="input-container">
+                    <label for="mail"></label>
+                    <input type="email" name="mail" id="mail" required>
+                    <span>E-mail</span>
+                    <div class="error"></div>
+                </div>
+    
+                <div class="input-container">
+                    <label for="phone"></label>
+                    <input type="tel" name="phone" id="phone" required maxlength="10" minlength="10">
+                    <span>Phone</span>
+                    <div class="error"></div>
+                </div>             
+
+                <div class="input-container">
+                    <label for="user-password"></label>
+                    <input type="password" name="user-password" id="user-password" class="user-password" required>
+                    <span>Password</span>
+                    <div class="error"></div>
+                </div>
+
+                <div class="input-container">
+                    <label for="user-password-confirm"></label>
+                    <input type="password" name="user-password-confirm" id="user-password-confirm" class="password-confirmation" required>
+                    <span>Confirm Password</span>
+                    <div class="error"></div>
+                </div>
+
+                <div class="input-container">
+                    <select id="role" name="role" required>
+                        <option value="" disabled selected>Select Role</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <div class="error"></div>
+                </div>   
+
+                <div id="btm">
+                    <button type="submit" class="submit-btn">Create Account </button>
+                    <p class="btm-text">
+                        Already have an account..? <a href="login.html" class="btm-text-highlighted">Sign up</a>
+                    </p>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <section class="outro-overlay disabled slideUp-animation">
+        <h1 class="company">Basket <sup>&trade;</sup></h1>
+        <h1 class="outro-greeting">Thank's for signing up..!</h1>
+        <a href="login.html" class="btm-text-highlighted">Log-in</a>
+    </section>
+
+    <script>
+        document.getElementById("registration-form").addEventListener("submit", function(event) {
+            let isValid = true;
+
+            // Email validation
+            let email = document.getElementById("mail");
+            let emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(email.value)) {
+                email.nextElementSibling.textContent = "Enter a valid email address";
+                isValid = false;
+            } else {
+                email.nextElementSibling.textContent = "";
+            }
+
+            // Phone number validation
+            let phone = document.getElementById("phone");
+            let phonePattern = /^[0-9]{10}$/;
+            if (!phonePattern.test(phone.value)) {
+                phone.nextElementSibling.textContent = "Enter a valid 10-digit phone number";
+                isValid = false;
+            } else {
+                phone.nextElementSibling.textContent = "";
+            }
+
+            // Password validation
+            let password = document.getElementById("user-password");
+            let confirmPassword = document.getElementById("user-password-confirm");
+            let passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            
+            if (!passwordPattern.test(password.value)) {
+                password.nextElementSibling.textContent = "Password must be at least 8 characters, include an uppercase letter, a lowercase letter, a number, and a special character.";
+                isValid = false;
+            } else {
+                password.nextElementSibling.textContent = "";
+            }
+
+            // Confirm password validation
+            if (password.value !== confirmPassword.value) {
+                confirmPassword.nextElementSibling.textContent = "Passwords do not match";
+                isValid = false;
+            } else {
+                confirmPassword.nextElementSibling.textContent = "";
+            }
+
+            if (!isValid) {
+                event.preventDefault(); // Stop form submission
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard || Hostel Girls Safety SOS</title>
+    <link rel="stylesheet" href="assets/css/user-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- Global CSRF Token Variable -->
+    <script>
+    let csrfToken = '';
+    </script>
+
+    <!-- Session Check -->
+    <script>
+    fetch('get_user_profile.php')
+        .then(response => {
+            if (response.status === 401) {
+                window.location.href = 'login.html';
+            }
+            return response.json();
+        })
+        .catch(() => window.location.href = 'login.html');
+    </script>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <h1>Women Safety SOS System</h1>
+        <div class="nav-right">
+            <div class="profile-dropdown">
+                <button class="profile-btn">My Profile</button>
+               <div class="dropdown-content" id="userProfile">
+    <p><strong>Name:</strong> <span id="userName">Loading...</span></p>
+    <p><strong>Email:</strong> <span id="userEmail">Loading...</span></p>
+    <p><strong>Contact:</strong> <span id="userContact">Loading...</span></p>
+    <button type="button" onclick="logout()">Logout</button>
+</div>
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        <!-- Guardian Management -->
+        <section class="guardian-section">
+            <h2>Guardian Management</h2>
+            <form id="guardianForm">
+                <input type="text" id="guardianName" placeholder="Guardian Name" required>
+                <input type="email" id="guardianEmail" placeholder="Guardian Email" required>
+                <input type="tel" id="guardianContact" placeholder="Guardian Contact" required maxlength="10" minlength="10">
+                <button type="submit">Add Guardian</button>
+            </form>
+            
+            <h3>Added Guardians</h3>
+            <ul id="guardiansList"></ul>
+        </section>
+
+        <!-- Complaint Management -->
+        <section class="complaint-section">
+            <h2>Complaint Management</h2>
+            <form id="complaintForm">
+                <input type="text" id="complaintName" placeholder="Your Name" required>
+                <input type="text" id="complaintTitle" placeholder="Complaint Title" required>
+                <textarea id="complaintDescription" placeholder="Describe your complaint..." required></textarea>
+                <button type="submit">Submit Complaint</button>
+            </form>
+    
+            <h3>Submitted Complaints</h3>
+            <ul id="complaintsList"></ul>
+        </section>
+
+        <!-- Live Location Tracking -->
+        <section class="location-section">
+            <h2>Live Location Tracking</h2>
+            <p><strong>Current Location:</strong> <span id="liveLocation">Fetching...</span></p>
+            <button onclick="getLocation()">Update Location</button>
+        </section>
+
+        <!-- Emergency SOS -->
+        <section class="sos-section">
+            <h2>Emergency SOS</h2>
+            <button id="sosBtn">Send SOS Alert</button>
+        </section>
+
+        <section class="sos-section">
+            <h2>Emergency SOS on SMS</h2>
+            <button id="smsBtn">Send SOS Alert on SMS</button>
+        </section>
+    </main>
+
+    <script>
+        emailjs.init("hnxfXpoacF_8IAUtz");
+
+        // =====================================f=======
+        // STEP 1: LOAD CSRF TOKEN FIRST
+        // ============================================
+        function initializeCSRFToken() {
+            return fetch('get_csrf_token.php')
+                .then(response => response.json())
+                .then(data => {
+                    csrfToken = data.token;
+                    
+                    attachFormListeners(); // Attach listeners AFTER token is loaded
+                    return csrfToken;
+                })
+                .catch(error => {
+                });
+        }
+
+        // ============================================
+        // STEP 2: ATTACH FORM LISTENERS (After CSRF is loaded)
+        // ============================================
+        function attachFormListeners() {
+            // Guardian Form
+            const guardianForm = document.getElementById('guardianForm');
+            if (guardianForm) {
+                guardianForm.removeEventListener('submit', handleGuardianSubmit); // Remove old listener
+                guardianForm.addEventListener('submit', handleGuardianSubmit);
+            }
+
+            // Complaint Form
+            const complaintForm = document.getElementById('complaintForm');
+            if (complaintForm) {
+                complaintForm.removeEventListener('submit', handleComplaintSubmit); // Remove old listener
+                complaintForm.addEventListener('submit', handleComplaintSubmit);
+            }
+
+            // SOS Button
+            const sosBtn = document.getElementById('sosBtn');
+            if (sosBtn) {
+                sosBtn.removeEventListener('click', sendSOS); // Remove old listener
+                sosBtn.addEventListener('click', sendSOS);
+            }
+        }
+
+        // ============================================
+        // LOAD USER PROFILE
+        // ============================================
+        function loadUserProfile() {
+            fetch('get_user_profile.php')
+                .then(response => {  
+                    if (response.status === 401) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert('Error loading profile: ' + data.error);
+                        return;
+                    }
+
+                    // ✅ USE CORRECT FIELD NAMES
+                    const userName = data.first_name && data.last_name 
+                        ? data.first_name + ' ' + data.last_name 
+                        : data.name || 'User';
+
+                    // Update profile display
+                    if (document.getElementById("userName")) {
+                        document.getElementById("userName").innerText = userName;
+                    }
+                    if (document.getElementById("userEmail")) {
+                        document.getElementById("userEmail").innerText = data.email || 'N/A';
+                    }
+                    if (document.getElementById("userContact")) {
+                        document.getElementById("userContact").innerText = data.phone || 'N/A';
+                    }
+                })
+                .catch(error => {
+                    alert('Failed to load profile: ' + error.message);
+                });
+        }
+
+        // ============================================
+        // GUARDIAN MANAGEMENT
+        // ============================================
+        function loadGuardians() {
+            fetch("get_guardians.php")
+                .then(response => response.json())
+                .then(data => {
+                    let guardiansList = document.getElementById("guardiansList");
+                    guardiansList.innerHTML = "";
+
+                    if (data.error) {
+                        guardiansList.innerHTML = `<li>${data.error}</li>`;
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        guardiansList.innerHTML = "<li>No guardians added yet.</li>";
+                    } else {
+                        data.forEach(guardian => {
+                            let listItem = document.createElement("li");
+                            
+                            let nameSpan = document.createElement('strong');
+                            nameSpan.innerText = guardian.name; // Auto-escapes HTML
+                            listItem.appendChild(nameSpan);
+                            
+                            let emailSpan = document.createElement('span');
+                            emailSpan.innerText = ` - ${guardian.email} (${guardian.contact}) `;
+                            listItem.appendChild(emailSpan);
+                            
+                            let removeBtn = document.createElement('button');
+                            removeBtn.className = 'remove-btn';
+                            removeBtn.innerText = 'Remove';
+                            removeBtn.onclick = () => removeGuardian(guardian.id);
+                            listItem.appendChild(removeBtn);
+                            
+                            guardiansList.appendChild(listItem);
+                        });
+                    }
+                })
+                .catch(error);
+        }
+
+        // Add Guardian Handler
+        function handleGuardianSubmit(e) {
+            e.preventDefault();
+            
+            if (!csrfToken) {
+                alert('❌ Security token not loaded. Please refresh the page.');
+                return;
+            }
+            
+            const guardianName = document.getElementById('guardianName').value.trim();
+            const guardianEmail = document.getElementById('guardianEmail').value.trim();
+            const guardianContact = document.getElementById('guardianContact').value.trim();
+            
+            
+            const formData = new FormData();
+            formData.append('guardianName', guardianName);
+            formData.append('guardianEmail', guardianEmail);
+            formData.append('guardianContact', guardianContact);
+            formData.append('csrf_token', csrfToken);
+            
+            fetch('add_guardian.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.status === 403) {
+                    throw new Error('CSRF validation failed on server');
+                }
+                return response.json();
+            })
+            .then(data => {
+                
+                if (data.error) {
+                    alert('❌ ' + data.error);
+                } else {
+                    alert('✅ ' + (data.success || 'Guardian added successfully!'));
+                    document.getElementById('guardianForm').reset();
+                    loadGuardians();
+                }
+            })
+            .catch(error => {
+                alert('❌ Error adding guardian: ' + error.message);
+            });
+        }
+
+        // Remove Guardian with CSRF Protection
+        function removeGuardian(guardianId) {
+            if (confirm('Are you sure you want to remove this guardian?')) {
+                if (!csrfToken) {
+                    alert('❌ Security token not loaded.');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('guardianId', guardianId);
+                formData.append('csrf_token', csrfToken);
+                
+                fetch('remove_guardians.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('❌ ' + data.error);
+                    } else {
+                        alert('✅ ' + (data.success || 'Guardian removed successfully!'));
+                        loadGuardians();
+                    }
+                })
+                .catch(error);
+            }
+        }
+
+        // ============================================
+        // COMPLAINT MANAGEMENT
+        // ============================================
+        function loadComplaints() {
+            fetch("get_complaints.php")
+                .then(response => response.json())
+                .then(data => {
+                    let complaintsList = document.getElementById("complaintsList");
+                    complaintsList.innerHTML = "";
+
+                    if (data.error) {
+                        complaintsList.innerHTML = `<li>${data.error}</li>`;
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        complaintsList.innerHTML = "<li>No complaints submitted yet.</li>";
+                    } else {
+                        data.forEach(complaint => {
+                            let listItem = document.createElement("li");
+                            
+                            let nameSpan = document.createElement('strong');
+                            nameSpan.innerText = complaint.name + ': ';
+                            listItem.appendChild(nameSpan);
+                            
+                            let titleSpan = document.createElement('strong');
+                            titleSpan.innerText = complaint.title;
+                            listItem.appendChild(titleSpan);
+                            
+                            let descSpan = document.createElement('span');
+                            descSpan.innerText = ' - ' + complaint.description + ' ';
+                            listItem.appendChild(descSpan);
+                            
+                            let removeBtn = document.createElement('button');
+                            removeBtn.className = 'remove-btn';
+                            removeBtn.innerText = 'Remove';
+                            removeBtn.onclick = () => removeComplaint(complaint.id);
+                            listItem.appendChild(removeBtn);
+                            
+                            complaintsList.appendChild(listItem);
+                        });
+                    }
+                })
+                .catch(error);
+        }
+
+        // Add Complaint Handler
+        function handleComplaintSubmit(e) {
+            e.preventDefault();
+            
+            if (!csrfToken) {
+                alert('❌ Security token not loaded. Please refresh the page.');
+                return;
+            }
+            
+            const complaintName = document.getElementById('complaintName').value.trim();
+            const complaintTitle = document.getElementById('complaintTitle').value.trim();
+            const complaintDescription = document.getElementById('complaintDescription').value.trim();
+
+            // Client-side validation
+            if (!complaintName || complaintName.length < 2) {
+                alert('❌ Name must be at least 2 characters');
+                return;
+            }
+            if (!complaintTitle || complaintTitle.length < 5) {
+                alert('❌ Title must be at least 5 characters');
+                return;
+            }
+            if (!complaintDescription || complaintDescription.length < 10) {
+                alert('❌ Description must be at least 10 characters');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('complaintName', complaintName);
+            formData.append('complaintTitle', complaintTitle);
+            formData.append('complaintDescription', complaintDescription);
+            formData.append('csrf_token', csrfToken);
+                
+            fetch('add_complaint.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // Handle 500 error
+                if (response.status === 500) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Server error occurred');
+                    });
+                }
+                
+                // Handle other errors
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    });
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    alert('❌ ' + data.error);
+                } else {
+                    alert('✅ ' + (data.success || 'Complaint submitted successfully!'));
+                    document.getElementById('complaintForm').reset();
+                    loadComplaints();
+                }
+            })
+            .catch(error => {
+                alert('❌ Error submitting complaint:\n' + error.message);
+            });
+        }
+
+        // Remove Complaint with CSRF Protection
+        function removeComplaint(complaintId) {
+            if (confirm('Are you sure you want to remove this complaint?')) {
+                if (!csrfToken) {
+                    alert('❌ Security token not loaded.');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('complaintId', complaintId);
+                formData.append('csrf_token', csrfToken);
+                
+                fetch('remove_complaint.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('❌ ' + data.error);
+                    } else {
+                        alert('✅ ' + (data.success || 'Complaint removed successfully!'));
+                        loadComplaints();
+                    }
+                })
+                .catch(error);
+            }
+        }
+
+        // ============================================
+        // LOCATION TRACKING
+        // ============================================
+        function getLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        let latitude = position.coords.latitude;
+                        let longitude = position.coords.longitude;
+                        let googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+                        document.getElementById("liveLocation").innerHTML = `<a href="${googleMapsLink}" target="_blank">📍 Click to View</a>`;
+
+                        if (callback) {
+                            callback(googleMapsLink);
+                        }
+                    },
+                    (error) => {
+                        alert("❌ Location access denied or unavailable.");
+                    }
+                );
+            } else {
+                alert("❌ Geolocation not supported.");
+            }
+        }
+
+        // ============================================
+        // SOS ALERT - FIXED VERSION
+        // ============================================
+        let lastSOSTime = 0;
+        const SOS_COOLDOWN = 5000; // 5 seconds
+
+        function sendSOS() {
+            const now = Date.now();
+            
+            // ✅ RATE LIMITING
+            if (now - lastSOSTime < SOS_COOLDOWN) {
+                alert('⏱️ Please wait ' + Math.ceil((SOS_COOLDOWN - (now - lastSOSTime)) / 1000) + ' seconds before sending another SOS');
+                return;
+            }
+            
+            lastSOSTime = now;
+
+            if (!csrfToken) {
+                alert('❌ Security token not loaded. Please refresh the page.');
+                return;
+            }
+            fetch('get_user_profile.php')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch user profile');
+                    return response.json();
+                })
+                .then(userData => {
+                    if (userData.error) {
+                        throw new Error(userData.error);
+                    }
+                    let firstName = userData.first_name;
+                    let lastName = userData.last_name;
+
+                    return fetch('get_guardians.php')
+                        .then(response => {
+                            if (!response.ok) throw new Error('Failed to fetch guardians');
+                            return response.json();
+                        })
+                        .then(guardians => {
+                            if (!Array.isArray(guardians) || guardians.length === 0) {
+                                throw new Error("No guardians added. Please add at least one guardian.");
+                            }
+                            return { guardians, firstName, lastName };
+                        });
+                })
+                .then(data => {
+                    const { guardians, firstName, lastName } = data;
+                    
+                    // Get location
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                let latitude = position.coords.latitude;
+                                let longitude = position.coords.longitude;
+                                let location = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+                                // STEP 1: Record SOS in database (MOST IMPORTANT)
+                                const sosData = new FormData();
+                                sosData.append('location', location);
+                                sosData.append('csrf_token', csrfToken);
+
+                                fetch("send_sos.php", {
+                                    method: "POST",
+                                    body: sosData
+                                })
+                                .then(response => {
+                                    if (response.status === 500) {
+                                        return response.text().then(text => {
+                                            throw new Error('Server error: ' + text.substring(0, 100));
+                                        });
+                                    }
+                                    
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP ${response.status}`);
+                                    }
+                                    
+                                    return response.json();
+                                })
+                                .then (data => {
+                                    alert("🚨 SOS Alert Recorded Successfully!");
+                                    
+                                    // STEP 2: Send guardian notifications (non-blocking)
+                                    sendGuardianNotifications(guardians, firstName, lastName, location);
+                                })
+                                .catch(error => {
+                                    alert("⚠️ SOS Recording Failed:\n" + error.message + "\n\nPlease try again or contact support.");
+                                });
+                            },
+                            (error) => {
+                                alert("❌ Location access denied. Please enable location services.");
+                            }
+                        );
+                    } else {
+                        alert("❌ Geolocation not supported by your browser.");
+                    }
+                })
+                .catch(error => {
+                    alert("❌ Error: " + error.message);
+                });
+        }
+
+        // ✅ SEND GUARDIAN NOTIFICATIONS (Non-blocking, separate function)
+        function sendGuardianNotifications(guardians, firstName, lastName, location) {
+            guardians.forEach(guardian => {
+                let templateParams = {
+                    to_email: guardian.email,
+                    user_name: firstName + ' ' + lastName,
+                    message: "Emergency! I am in danger!",
+                    location_link: location
+                };
+
+                emailjs.send("service_mdiijid", "template_rdiy5mi", templateParams)
+                    .then(response => {
+                    })
+                    .catch(error => {
+                        // Don't alert - SOS is already recorded in database
+                    });
+            });
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+        function logout() {
+    
+    // Clear localStorage/sessionStorage if used
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Redirect to logout.php (which destroys session and redirects to login)
+    window.location.href = "logout.php";
+}
+
+        // ============================================
+        // PAGE INITIALIZATION - START HERE
+        // ============================================
+        window.addEventListener('DOMContentLoaded', function() {
+            
+            // Step 1: Load CSRF token FIRST
+            initializeCSRFToken().then(() => {
+                // Step 2: Load data after CSRF is ready
+                loadUserProfile();
+                loadGuardians();
+                loadComplaints();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard || Women Safety SOS</title>
+    <link rel="stylesheet" href="assets/css/admin-dashboard.css">
+</head>
+<body>
+    <script>
+    if (!sessionStorage.getItem('securityVerified') || sessionStorage.getItem('securityVerified') !== 'true') {
+        window.location.href = "./Securitycode.html";
+    } else {
+    }
+    </script>
+    <header>
+        <h1>Admin Dashboard - Women Safety SOS</h1>
+        <div class="profile-container">
+            <button class="profile-btn" onclick="toggleProfileDropdown()">Admin Profile</button>
+            <div id="profileDropdown" class="profile-dropdown hidden">
+                <p><strong>Name:</strong> <span id="profileDropdownName"></span></p>
+                <p><strong>Email:</strong> <span id="profileDropdownEmail"></span></p>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <section class="dashboard-menu">
+            <button id="usersButton">📋 Show Registered Users</button>
+            <button id="sosButton">🚨 Show SOS Alerts</button>
+            <button id="policeButton">👮‍♂️ Show Registered Police</button>
+            <button id="complaintButton">⚠️ Show Complaints</button>
+        </section>
+        <section id="usersSection" class="hidden">
+            <h2>Registered Users</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable"></tbody>
+                </table>
+            </div>
+        </section>
+        <section id="sosAlertsSection">
+            <h2>SOS Alerts</h2>
+            <div id="sosAlertsContainer">
+            </div>
+        </section> 
+        <section id="policeSection" class="hidden">
+            <h2>Registered Police</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Station</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="policeTable"></tbody>
+                </table>
+            </div>
+        </section>
+        <section id="complaintSection" class="hidden">
+            <h2>Complaints</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>name</th>
+                            <th>title</th>
+                            <th>description</th>
+                            <th>created_at</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaintsTable"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script>
+    function loadAdminProfile() {
+        fetch("get_user_profile.php")
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    const userName = data.name;
+                    document.getElementById("profileDropdownName").innerText = data.name;
+                    document.getElementById("profileDropdownEmail").innerText = data.email;
+                    if (document.getElementById("userName")) {
+                        document.getElementById("userName").innerText = userName;
+                    }
+                    if (document.getElementById("userEmail")) {
+                        document.getElementById("userEmail").innerText = data.email;
+                    }
+                }
+            })
+            .catch(error);
+    }
+
+    function showSection(sectionId) {
+        document.querySelectorAll("main section").forEach(section => {
+            section.classList.add("hidden");
+        });
+        document.getElementById(sectionId).classList.remove("hidden");
+        if (sectionId === "usersSection") {
+            loadRegisteredUsers();
+        } else if (sectionId === "sosAlertsSection") {
+            loadSOSAlerts();
+        } else if (sectionId === "policeSection") {
+            loadRegisteredPolice();
+        } else if (sectionId === "complaintSection") {
+            loadComplaint();
+        }
+    }
+    function loadRegisteredUsers() {
+    fetch("get_registered_user.php")
+        .then(response => response.json())
+        .then(data => {
+            let usersTable = document.getElementById("usersTable");
+            usersTable.innerHTML = ""; 
+
+            if (data.length === 0) {
+                usersTable.innerHTML = "<tr><td colspan='3'>No registered users found.</td></tr>";
+            } else {
+                data.forEach(user => {
+                    let row = document.createElement('tr');
+                    let nameCell = document.createElement('td');
+                    nameCell.innerText = user.first_name + ' ' + user.last_name;
+                    row.appendChild(nameCell);
+                    let emailCell = document.createElement('td');
+                    emailCell.innerText = user.email;
+                    row.appendChild(emailCell);
+                    let phoneCell = document.createElement('td');
+                    phoneCell.innerText = user.phone;
+                    row.appendChild(phoneCell);
+                    usersTable.appendChild(row);
+                });
+            }
+        })
+        .catch(error);
+}
+    // Fetch & Display SOS Alerts
+    function loadSOSAlerts() {
+        fetch("get_sos_alerts.php")
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    return;
+                }
+
+                let html = `
+                    <table class="alerts-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Location</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                data.forEach(alert => {
+                    const statusClass = alert.status === 'active' ? 'status-active' : 'status-inactive';
+                    html += `
+                        <tr>
+                            <td>${alert.first_name} ${alert.last_name}</td>
+                            <td class="location-cell" title="${alert.location}">
+                                <a href="${alert.location}" target="_blank">View Location</a>
+                            </td>
+                            <td>${alert.email}</td>
+                            <td>
+                                <select class="status-select" onchange="updateSOSStatus(${alert.id}, this.value)">
+                                    <option value="active" ${alert.status === 'active' ? 'selected' : ''}>Active</option>
+                                    <option value="inactive" ${alert.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                                </select>
+                            </td>
+                            <td>${alert.timestamp}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById("sosAlertsContainer").innerHTML = html;
+            })
+            .catch(error);
+    }
+    function updateSOSStatus(alertId, newStatus) {
+        fetch("toggle_sos_alert.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ 
+                alert_id: alertId, 
+                status: newStatus 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadSOSAlerts(); 
+            } else {
+                alert("Error: " + data.error);
+                loadSOSAlerts(); 
+            }
+        })
+        .catch(error => {
+            loadSOSAlerts(); 
+        });
+    }
+    function loadRegisteredPolice() {
+    fetch("get_registered_police.php")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("HTTP error! Status: " + response.status);
+            }
+            return response.text();
+        })
+        .then(text => {
+            try {
+                return JSON.parse(text); 
+            } catch (error) {
+                throw new Error("Invalid JSON: " + text);
+            }
+        })
+        .then(data => {
+            let policeTable = document.getElementById("policeTable");
+            policeTable.innerHTML = "";
+
+            if (!Array.isArray(data) || data.length === 0) {
+                policeTable.innerHTML = "<tr><td colspan='4'>No police officers found.</td></tr>";
+                return;
+            }
+
+            data.forEach(officer => {
+                let row = `<tr>
+                    <td>${officer.name}</td>
+                    <td>${officer.station}</td>
+                    <td>${officer.email}</td>
+                    <td>${officer.contact}</td>
+                </tr>`;
+                policeTable.innerHTML += row;
+            });
+        })
+        .catch(error);
+}
+function loadComplaint() {
+        fetch("get_complaints.php")
+            .then(response => response.json())
+            .then (data => {
+                let complaintsTable = document.getElementById("complaintsTable");
+                complaintsTable.innerHTML = "";
+
+                if (data.length === 0) {
+                    complaintsTable.innerHTML = "<tr><td colspan='3'>No complaints found.</td></tr>";
+                } else {
+                    data.forEach(complaint => {
+                        let row = `<tr>
+                            <td>${complaint.id}</td>
+                            <td>${complaint.name}</td>
+                            <td>${complaint.title}</td>
+                            <td>${complaint.description}</td>
+                             <td>${complaint.created_at}</td>
+                        </tr>`;
+                        complaintsTable.innerHTML += row;
+                    });
+                }
+            })
+            .catch(error);
+    }
+function toggleSOSAlert(alertId, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const modal = document.getElementById("statusModal");
+    const confirmBtn = document.getElementById("confirmStatusBtn");
+    const statusSelect = document.getElementById("statusSelect");
+    statusSelect.value = currentStatus;
+    confirmBtn.dataset.alertId = alertId;
+    modal.style.display = "block";
+}
+function addComplaint(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById("complaintName").value;
+    const title = document.getElementById("complaintTitle").value;
+    const description = document.getElementById("complaintDescription").value;
+
+    fetch("manage_complaints.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ 
+            action: 'add',
+            name: name,
+            title: title,
+            description: description
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Complaint added successfully!");
+            document.getElementById("complaintForm").reset();
+            loadComplaint(); // Reload complaints
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(error );
+}
+
+// Delete Complaint
+function deleteComplaint(complaintId) {
+    if (confirm("Are you sure you want to delete this complaint?")) {
+        fetch("manage_complaints.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ 
+                action: 'delete',
+                complaint_id: complaintId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Complaint deleted successfully!");
+                loadComplaint(); // Reload complaints
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(error);
+    }
+}
+document.getElementById("policeButton").addEventListener("click", function() {
+    showSection("policeSection");
+});
+    // Logout Function
+    function logout() {
+        fetch("logout.php") 
+            .then(() => {
+                window.location.href = "login.html";
+            })
+            .catch(error);
+    }
+    function toggleProfileDropdown() {
+        let dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("hidden");
+    }
+    document.getElementById("usersButton").addEventListener("click", function() {
+        showSection("usersSection");
+    });
+
+    document.getElementById("sosButton").addEventListener("click", function() {
+        showSection("sosAlertsSection");
+    });
+
+    document.getElementById("policeButton").addEventListener("click", function() {
+        showSection("policeSection");
+    });
+    document.getElementById("complaintButton").addEventListener("click", function() {
+        showSection("complaintSection");
+    });
+    window.onload = function () {
+        loadAdminProfile();
+    };
+    function handleGuardianSubmit(e) {
+    e.preventDefault();
+    const guardianName = document.getElementById('guardianName').value.trim();
+    const guardianEmail = document.getElementById('guardianEmail').value.trim();
+    const guardianContact = document.getElementById('guardianContact').value.trim();
+    if (!guardianName || guardianName.length < 2) {
+        alert('❌ Guardian name must be at least 2 characters');
+        return;
+    }
+    if (!guardianEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guardianEmail)) {
+        alert('❌ Invalid email format');
+        return;
+    }
+    if (!guardianContact || !/^[0-9]{10}$/.test(guardianContact)) {
+        alert('❌ Contact must be 10 digits');
+        return;
+    }
+}
+function handleComplaintSubmit(e) {
+    e.preventDefault();
+    const complaintName = document.getElementById('complaintName').value.trim();
+    const complaintTitle = document.getElementById('complaintTitle').value.trim();
+    const complaintDescription = document.getElementById('complaintDescription').value.trim();
+    if (!complaintName || complaintName.length < 2 || complaintName.length > 100) {
+        alert('❌ Name must be 2-100 characters');
+        return;
+    }
+
+    if (!complaintTitle || complaintTitle.length < 5 || complaintTitle.length > 200) {
+        alert('❌ Title must be 5-200 characters');
+        return;
+    }
+
+    if (!complaintDescription || complaintDescription.length < 10 || complaintDescription.length > 2000) {
+        alert('❌ Description must be 10-2000 characters');
+        return;
+    }
+}
+    </script>
+</body>
+</html>
