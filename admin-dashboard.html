@@ -8,10 +8,26 @@
 </head>
 <body>
     <script>
-    if (!sessionStorage.getItem('securityVerified') || sessionStorage.getItem('securityVerified') !== 'true') {
-        window.location.href = "./Securitycode.html";
-    } else {
-    }
+    // if (!sessionStorage.getItem('securityVerified') || sessionStorage.getItem('securityVerified') !== 'true') {
+    //     window.location.href = "./Securitycode.html";
+    // } else {
+    // }
+     fetch('verify_admin_session.php')
+        .then(response => {
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = './login.html';
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error || !data.isAdmin) {
+                window.location.href = './login.html';
+            }
+        })
+        .catch(() => {
+            window.location.href = './login.html';
+        });
     </script>
     <header>
         <h1>Admin Dashboard - Women Safety SOS</h1>
