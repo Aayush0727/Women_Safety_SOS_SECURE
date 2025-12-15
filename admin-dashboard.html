@@ -120,7 +120,9 @@
                     }
                 }
             })
-            .catch(error);
+            .catch(error => {
+                alert("Error loading profile: " + error.message);
+            });
     }
 
     function showSection(sectionId) {
@@ -163,7 +165,9 @@
                 });
             }
         })
-        .catch(error);
+        .catch(error => {
+            alert("Error loading users: " + error.message);
+        });
 }
     // Fetch & Display SOS Alerts
     function loadSOSAlerts() {
@@ -214,7 +218,9 @@
 
                 document.getElementById("sosAlertsContainer").innerHTML = html;
             })
-            .catch(error);
+            .catch(error => {
+                alert("Error loading SOS alerts: " + error.message);
+            });
     }
     function updateSOSStatus(alertId, newStatus) {
         fetch("toggle_sos_alert.php", {
@@ -274,7 +280,9 @@
                 policeTable.innerHTML += row;
             });
         })
-        .catch(error);
+        .catch(error => {
+            alert("Error loading police officers: " + error.message);
+        });
 }
 function loadComplaint() {
         fetch("get_complaints.php")
@@ -298,7 +306,9 @@ function loadComplaint() {
                     });
                 }
             })
-            .catch(error);
+            .catch(error => {
+                alert("Error loading complaints: " + error.message);
+            });
     }
 function toggleSOSAlert(alertId, currentStatus) {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
@@ -338,7 +348,9 @@ function addComplaint(e) {
             alert("Error: " + data.error);
         }
     })
-    .catch(error );
+    .catch(error => {
+        alert("Error adding complaint: " + error.message);
+    });
 }
 
 // Delete Complaint
@@ -363,7 +375,9 @@ function deleteComplaint(complaintId) {
                 alert("Error: " + data.error);
             }
         })
-        .catch(error);
+        .catch(error => {
+            alert("Error deleting complaint: " + error.message);
+        });
     }
 }
 document.getElementById("policeButton").addEventListener("click", function() {
@@ -375,7 +389,9 @@ document.getElementById("policeButton").addEventListener("click", function() {
             .then(() => {
                 window.location.href = "login.html";
             })
-            .catch(error);
+            .catch(error => {
+                alert("Error during logout: " + error.message);
+            });
     }
     function toggleProfileDropdown() {
         let dropdown = document.getElementById("profileDropdown");
